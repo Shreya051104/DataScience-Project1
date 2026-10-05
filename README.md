@@ -1,21 +1,31 @@
-PharmaCare & Analytics DashboardA full-stack pharmaceutical tracking system and analytics suite. This project combines a Flask backend with SQLite authentication for managing patients and medicine inventory, along with a data analytics & Power BI pipeline to analyze drug sales, market share, competitor pricing, and healthcare KPIs across global regions.📌 Features1. Patient & Inventory Management (Web / Backend)User Authentication: Secure user signup and login sessions backed by SQLite.Patient Tracking: Keep records of patients, clinical conditions, age, and contact information.Medicine & Stock Inventory: Manage drug entries, batch tracking, stock counts, and expiration dates with automatic cascading user deletion.Tailwind CSS UI: Styled interfaces built on Tailwind CSS utility classes.2. Pharmaceutical Sales & Market AnalyticsDrug Performance Metrics: Track units sold, total revenue, and market share across key therapeutic areas (Oncology, Cardiology, Diabetes, Pulmonology, Rheumatology, Neurology).Competitor Benchmark: Side-by-side pricing analysis comparing proprietary drug prices against three competitor price tiers.Healthcare & Hospital Insights: Cross-reference sales with hospital tiers, doctor visits, sales rep visits, insurance coverage, and patient income levels.Regulatory & Safety Monitoring: Track adverse event frequencies and regulatory flags over monthly time series.Interactive Dashboards: Includes a Power BI report (.pbix) with customized light/dark themes for visual reporting.🗂️ Project Structure├── index.css                # Tailwind CSS entrypoint
-├── pharma_dataset.csv       # Pharmaceutical sales & market dataset (or Jupyter notebook analysis)
-├── requirements.txt         # Python dependencies
-├── database.db              # SQLite database (users, patients, medicines)
-├── Report.pbix              # Power BI interactive report and data models
-└── README.md                # Project documentation
-📊 Database Schema (SQLite)The relational database includes three primary tables:usersid: Integer primary key (Auto-increment)email: Text (Unique, required)password_hash: Text (Required)patientsid: Integer primary key (Auto-increment)user_id: Foreign key referencing users(id) on delete cascadename, age, contact, condition, created_atmedicinesid: Integer primary key (Auto-increment)user_id: Foreign key referencing users(id) on delete cascadename, batch_number, quantity (CHECK quantity > 0), expiry_date, category, created_at📈 Dataset Overview (pharma_dataset.csv)The analytics dataset contains 1,500 monthly observation records with 22 attributes:ColumnDescriptiondrug_id / drug_nameUnique drug code and commercial brand name (e.g., Immunexa, Diabetrol, Dermasol, ArthroAid, OncoCure)therapeutic_areaClassification (e.g., Oncology, Cardiology, Pulmonology, Diabetes)molecule_typeSmall Molecule, Biologic, or BiosimilarregionGeographic market (North America, Europe, LATAM, APAC)drug_price vs competitor_*_priceProduct price compared against primary competing drugsunits_sold & total_revenueSales volumes and generated revenuemarketing_spend & rep_visitsPromotional budget and sales representative engagementsadverse_events & regulatory_flagsPharmacovigilance safety metricsmarket_shareEstimated percentage share in respective therapeutic class🚀 Getting StartedPrerequisitesPython 3.9+pip package manager(Optional) Power BI Desktop to open .pbix reports1. Clone the Repositorygit clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
-2. Set Up a Virtual Environment# macOS/Linux
-python3 -m venv venv
-source venv/bin/activate
+# PharmaOptima
 
-# Windows
-python -m venv venv
-venv\Scripts\activate
-3. Install Dependenciespip install -r requirements.txt
-4. Run Data Exploration & NotebooksTo inspect the dataset and cleaning scripts in Jupyter:pip install jupyter
-jupyter notebook
-5. Running the Web ApplicationIf launching your Flask app:export FLASK_APP=app.py    # On Windows: set FLASK_APP=app.py
-flask run
-Access the server at http://localhost:5000.🛠️ Built WithBackend: Flask & Flask-CORSData Manipulation: PandasDatabase: SQLite3Frontend / Styling: Tailwind CSSBI & Visuals: Microsoft Power BI📄 LicenseThis project is licensed under the MIT License - feel free to modify and use it for educational or commercial purposes.
+PharmaOptima is a React dashboard backed by a Flask API. It provides account registration and sign-in, private medicine and patient records, medicine expiry alerts, and analytics from the project-level `pharma_dataset.csv`.
+
+## Run locally
+
+1. From the project root, install the Python packages used by the API:
+
+   ```powershell
+   python -m pip install -r requirements.txt
+   ```
+
+2. From the project root, start the API:
+
+   ```powershell
+   python frontend/src/app.py
+   ```
+
+3. In another terminal, start the frontend:
+
+   ```powershell
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+4. Open the local Vite URL, create an account, and sign in. The API creates `pharma_app.db` in the project root to store accounts, medicine inventory, and patient records.
+
+Set `FLASK_SECRET_KEY` to a long, private random value when running the API for longer than local development; otherwise sessions are invalidated when the API restarts. Set `PHARMA_DATABASE_PATH` to change the SQLite database location. Set `FLASK_COOKIE_SECURE=true` when the API is served over HTTPS.
+
+Medicine expiry alerts include items that are already expired and items expiring within 90 days. Each account can access only the medicines and patient records it created. Passwords are stored as one-way hashes. Patient details are sensitive data: keep the database file access restricted and do not expose this development server directly to the public internet.

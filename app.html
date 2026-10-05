@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaOptima - Pharmaceutical Market Intelligence & Sales Analytics</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        medical: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                            dark: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- ================= AUTHENTICATION / LOGIN OVERLAY ================= -->
+    <div id="auth-overlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl space-y-6 border border-slate-100">
+            <div class="text-center space-y-2">
+                <div class="bg-green-500 text-slate-900 w-14 h-14 rounded-2xl mx-auto flex items-center justify-center font-bold text-2xl shadow-lg">
+                    <i class="fa-solid fa-capsules"></i>
+                </div>
+                <h2 class="text-2xl font-extrabold text-slate-900">Pharma<span class="text-green-600">Optima</span></h2>
+                <p class="text-xs text-slate-500">Sign in to your analytical dashboard & database portal</p>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Email Address / Username</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-envelope"></i>
+                        </span>
+                        <input type="text" id="login-email" required placeholder="admin@pharmaoptima.com" class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-lock"></i>
+                        </span>
+                        <input type="password" id="login-password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-green-600/20 text-sm">
+                    Sign In to Dashboard
+                </button>
+            </form>
+
+            <div class="bg-slate-50 p-3 rounded-xl text-center text-xs text-slate-500 border border-slate-200">
+                <p class="font-semibold text-slate-700">Demo Access Tip:</p>
+                <p>Type any credentials (e.g., <code class="text-green-600 font-mono">admin@pharma.com</code> / <code class="text-green-600 font-mono">123456</code>) to log in instantly.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-green-500 text-slate-900 p-2 rounded-xl font-bold text-xl flex items-center justify-center shadow-lg">
+                    <i class="fa-solid fa-capsules"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">Pharma<span class="text-green-400">Optima</span></h1>
+                    <p class="text-xs text-slate-400">Pharmaceutical Market Intelligence & Point-of-Sale Platform</p>
+                </div>
+            </div>
+            
+            <!-- Tab Navigation Buttons & Logout -->
+            <div class="flex items-center space-x-2 mt-2 md:mt-0">
+                <nav class="flex flex-wrap gap-1.5">
+                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn px-3 py-2 rounded-lg text-xs font-semibold bg-green-600 text-white transition shadow">
+                        <i class="fa-solid fa-chart-line mr-1"></i> Dashboard
+                    </button>
+                    <button onclick="switchTab('database')" id="btn-database" class="tab-btn px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+                        <i class="fa-solid fa-database mr-1"></i> Database
+                    </button>
+                    <button onclick="switchTab('entry')" id="btn-entry" class="tab-btn px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+                        <i class="fa-solid fa-folder-plus mr-1"></i> New Entry
+                    </button>
+                    <button onclick="switchTab('simulator')" id="btn-simulator" class="tab-btn px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+                        <i class="fa-solid fa-calculator mr-1"></i> Simulator
+                    </button>
+                    <button onclick="switchTab('expiry')" id="btn-expiry" class="tab-btn px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition relative">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Expiry Alerts
+                        <span id="expiry-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
+                    </button>
+                    <button onclick="switchTab('insights')" id="btn-insights" class="tab-btn px-3 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+                        <i class="fa-solid fa-brain mr-1"></i> AI Insights
+                    </button>
+                </nav>
+                <button onclick="handleLogout()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-bold transition flex items-center shadow" title="Logout">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- ================= TAB 1: EXECUTIVE DASHBOARD ================= -->
+        <div id="tab-dashboard" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Portfolio Revenue</p>
+                        <h3 class="text-2xl font-extrabold text-slate-900 mt-1">$77,736,872</h3>
+                        <span class="text-xs text-green-600 font-semibold mt-1 inline-block"><i class="fa-solid fa-arrow-up mr-1"></i> +8.4% YoY Growth</span>
+                    </div>
+                    <div class="p-3 bg-green-50 text-green-600 rounded-xl text-xl"><i class="fa-solid fa-sack-dollar"></i></div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Avg Market Share</p>
+                        <h3 class="text-2xl font-extrabold text-slate-900 mt-1">30.70%</h3>
+                        <span class="text-xs text-green-600 font-semibold mt-1 inline-block"><i class="fa-solid fa-check mr-1"></i> Target: >30%</span>
+                    </div>
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-xl text-xl"><i class="fa-solid fa-chart-pie"></i></div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Active Drug Formulations</p>
+                        <h3 class="text-2xl font-extrabold text-slate-900 mt-1">200 SKUs</h3>
+                        <span class="text-xs text-indigo-600 font-semibold mt-1 inline-block"><i class="fa-solid fa-shield-halved mr-1"></i> 8 Areas</span>
+                    </div>
+                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl text-xl"><i class="fa-solid fa-pills"></i></div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Units Distributed</p>
+                        <h3 class="text-2xl font-extrabold text-slate-900 mt-1">300,129</h3>
+                        <span class="text-xs text-amber-600 font-semibold mt-1 inline-block"><i class="fa-solid fa-globe mr-1"></i> 4 Regions</span>
+                    </div>
+                    <div class="p-3 bg-amber-50 text-amber-600 rounded-xl text-xl"><i class="fa-solid fa-truck-medical"></i></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">Revenue by Therapeutic Area</h3>
+                    <div class="h-72 relative"><canvas id="therapeuticChart"></canvas></div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">Market Share Distribution by Region</h3>
+                    <div class="h-72 relative flex justify-center"><canvas id="regionChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: DATABASE ================= -->
+        <div id="tab-database" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-slate-900">Local Database Management</h3>
+                    <button onclick="exportCSV()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-semibold transition"><i class="fa-solid fa-download mr-1"></i> Export CSV</button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <input type="text" id="searchInput" oninput="renderTable()" placeholder="Search drug name or ID..." class="w-full px-4 py-2 text-sm border rounded-xl">
+                    <select id="filterTherapeutic" onchange="renderTable()" class="w-full px-4 py-2 text-sm border rounded-xl">
+                        <option value="">All Therapeutic Areas</option>
+                        <option value="Oncology">Oncology</option>
+                        <option value="Cardiology">Cardiology</option>
+                        <option value="Pulmonology">Pulmonology</option>
+                        <option value="Diabetes">Diabetes</option>
+                    </select>
+                    <select id="filterRegion" onchange="renderTable()" class="w-full px-4 py-2 text-sm border rounded-xl">
+                        <option value="">All Regions</option>
+                        <option value="North America">North America</option>
+                        <option value="Europe">Europe</option>
+                        <option value="APAC">APAC</option>
+                        <option value="LATAM">LATAM</option>
+                    </select>
+                </div>
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 text-xs font-bold uppercase border-b">
+                                <th class="p-3">Drug ID</th>
+                                <th class="p-3">Drug Name</th>
+                                <th class="p-3">Area</th>
+                                <th class="p-3">Expiry</th>
+                                <th class="p-3">Units</th>
+                                <th class="p-3">Price</th>
+                                <th class="p-3">Revenue</th>
+                                <th class="p-3 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="databaseTableBody" class="divide-y text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: NEW ENTRY ================= -->
+        <div id="tab-entry" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                    <h3 class="text-lg font-bold text-slate-900 border-b pb-2"><i class="fa-solid fa-pills mr-2 text-green-600"></i> Add New Medicine</h3>
+                    <form onsubmit="handleMedicineSubmit(event)" class="space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" id="new-drug_id" required placeholder="Drug ID (e.g. D0300)" class="w-full px-3 py-2 text-sm border rounded-lg">
+                            <input type="text" id="new-drug_name" required placeholder="Drug Name" class="w-full px-3 py-2 text-sm border rounded-lg">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <select id="new-therapeutic_area" class="w-full px-3 py-2 text-sm border rounded-lg">
+                                <option value="Oncology">Oncology</option>
+                                <option value="Cardiology">Cardiology</option>
+                                <option value="Diabetes">Diabetes</option>
+                                <option value="Pulmonology">Pulmonology</option>
+                            </select>
+                            <input type="date" id="new-expiry_date" required class="w-full px-3 py-2 text-sm border rounded-lg">
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <input type="number" id="new-units_sold" required placeholder="Units" value="200" class="w-full px-3 py-2 text-sm border rounded-lg">
+                            <input type="number" step="0.01" id="new-drug_price" required placeholder="Price" value="200" class="w-full px-3 py-2 text-sm border rounded-lg">
+                            <input type="number" step="0.01" id="new-total_revenue" required placeholder="Revenue" value="40000" class="w-full px-3 py-2 text-sm border rounded-lg">
+                        </div>
+                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-sm">Save Medicine</button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                    <h3 class="text-lg font-bold text-slate-900 border-b pb-2"><i class="fa-solid fa-user-injured mr-2 text-blue-600"></i> Register New Patient</h3>
+                    <form onsubmit="handlePatientSubmit(event)" class="space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" id="pat-name" required placeholder="Patient Name" class="w-full px-3 py-2 text-sm border rounded-lg">
+                            <input type="text" id="pat-age-gender" required placeholder="Age / Gender" class="w-full px-3 py-2 text-sm border rounded-lg">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" id="pat-contact" required placeholder="Contact Number" class="w-full px-3 py-2 text-sm border rounded-lg">
+                            <select id="pat-diagnosis" class="w-full px-3 py-2 text-sm border rounded-lg">
+                                <option value="Oncology">Oncology</option>
+                                <option value="Cardiology">Cardiology</option>
+                                <option value="Diabetes">Diabetes</option>
+                            </select>
+                        </div>
+                        <input type="text" id="pat-medicine" required placeholder="Prescribed Medicine" class="w-full px-3 py-2 text-sm border rounded-lg">
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-sm">Admit Patient</button>
+                    </form>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-3">
+                <h3 class="text-lg font-bold text-slate-900">Recent Patients</h3>
+                <div class="overflow-x-auto border rounded-xl">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 border-b text-xs uppercase text-slate-600">
+                            <tr>
+                                <th class="p-3">Name</th>
+                                <th class="p-3">Age/Gender</th>
+                                <th class="p-3">Contact</th>
+                                <th class="p-3">Diagnosis</th>
+                                <th class="p-3">Medicine</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patientTableBody" class="divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 4: SIMULATOR ================= -->
+        <div id="tab-simulator" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">Pricing & Revenue Simulator</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="space-y-3 bg-slate-50 p-4 rounded-xl border">
+                        <label class="block text-xs font-bold uppercase">Price ($): <span id="val-price" class="text-green-600">260</span></label>
+                        <input type="range" id="sim-price" min="20" max="500" value="260" oninput="runSimulation()" class="w-full">
+                        <label class="block text-xs font-bold uppercase">Marketing ($): <span id="val-marketing" class="text-green-600">100,000</span></label>
+                        <input type="range" id="sim-marketing" min="10000" max="200000" step="5000" value="100000" oninput="runSimulation()" class="w-full">
+                    </div>
+                    <div class="md:col-span-2 grid grid-cols-2 gap-4">
+                        <div class="bg-green-600 text-white p-6 rounded-2xl shadow">
+                            <p class="text-xs uppercase opacity-85">Projected Revenue</p>
+                            <h2 class="text-3xl font-extrabold mt-2" id="sim-rev-result">$54,200.00</h2>
+                        </div>
+                        <div class="bg-slate-900 text-white p-6 rounded-2xl shadow">
+                            <p class="text-xs uppercase opacity-85">Market Share</p>
+                            <h2 class="text-3xl font-extrabold mt-2" id="sim-share-result">31.5%</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 5: EXPIRY ALERTS ================= -->
+        <div id="tab-expiry" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-slate-900">Drug Expiry Alerts</h3>
+                    <span id="expiry-summary-badge" class="bg-amber-100 text-amber-800 px-3 py-1 rounded-xl text-xs font-bold">Checking...</span>
+                </div>
+                <div class="overflow-x-auto border rounded-xl">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 border-b text-xs uppercase text-slate-600">
+                            <tr>
+                                <th class="p-3">ID</th>
+                                <th class="p-3">Name</th>
+                                <th class="p-3">Expiry Date</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expiryTableBody" class="divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 6: AI INSIGHTS ================= -->
+        <div id="tab-insights" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                <h3 class="text-xl font-bold text-slate-900">AI & Strategic Market Intelligence</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div class="p-4 bg-green-50 rounded-xl border border-green-100">
+                        <h4 class="font-bold text-green-800 mb-1">Pricing Optimization</h4>
+                        <p class="text-slate-700">Optimal pricing between $250 and $380 in Tier 1 hospital networks maximizes revenue return without triggering regulatory penalties.</p>
+                    </div>
+                    <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                        <h4 class="font-bold text-blue-800 mb-1">Marketing ROI</h4>
+                        <p class="text-slate-700">North America and Europe yield 18% higher conversion per marketing dollar due to mature insurance coverage ecosystems.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        const defaultDataset = [
+            {drug_id: "D0103", drug_name: "Immunexa", therapeutic_area: "Oncology", region: "Europe", expiry_date: "2026-05-15", units_sold: 228, drug_price: 419.81, total_revenue: 95716.68},
+            {drug_id: "D0180", drug_name: "Diabetrol", therapeutic_area: "Cardiology", region: "North America", expiry_date: "2026-11-20", units_sold: 199, drug_price: 376.51, total_revenue: 74925.49},
+            {drug_id: "D0093", drug_name: "ArthroAid", therapeutic_area: "Oncology", region: "LATAM", expiry_date: "2026-06-10", units_sold: 208, drug_price: 426.35, total_revenue: 88680.80},
+            {drug_id: "D0115", drug_name: "Immunexa", therapeutic_area: "Oncology", region: "APAC", expiry_date: "2026-04-10", units_sold: 218, drug_price: 262.51, total_revenue: 57227.18}
+        ];
+
+        const defaultPatients = [
+            {name: "Sarah Jenkins", ageGender: "34 / Female", contact: "+1 (555) 382-9102", diagnosis: "Oncology", medicine: "Immunexa"}
+        ];
+
+        if (!localStorage.getItem('pharma_db')) {
+            localStorage.setItem('pharma_db', JSON.stringify(defaultDataset));
+        }
+        if (!localStorage.getItem('pharma_patients')) {
+            localStorage.setItem('pharma_patients', JSON.stringify(defaultPatients));
+        }
+
+        let therapeuticChartInstance = null;
+        let regionChartInstance = null;
+
+        // Force Login Overlay check on load
+        window.onload = function() {
+            const loggedUser = localStorage.getItem('pharma_user');
+            if (loggedUser) {
+                document.getElementById('auth-overlay').classList.add('hidden');
+            } else {
+                document.getElementById('auth-overlay').classList.remove('hidden');
+            }
+            renderCharts();
+            checkExpiryAlerts();
+            renderPatientsTable();
+            renderTable();
+        };
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+            localStorage.setItem('pharma_user', email);
+            document.getElementById('auth-overlay').classList.add('hidden');
+            renderCharts();
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('pharma_user');
+            document.getElementById('auth-overlay').classList.remove('hidden');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-green-600', 'text-white');
+                btn.classList.add('bg-slate-800', 'text-slate-300');
+            });
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.getElementById('btn-' + tabId).classList.remove('bg-slate-800', 'text-slate-300');
+            document.getElementById('btn-' + tabId).classList.add('bg-green-600', 'text-white');
+
+            if (tabId === 'dashboard') renderCharts();
+            if (tabId === 'database') renderTable();
+            if (tabId === 'entry') renderPatientsTable();
+            if (tabId === 'simulator') runSimulation();
+            if (tabId === 'expiry') renderExpiryView();
+        }
+
+        function handleMedicineSubmit(event) {
+            event.preventDefault();
+            const newItem = {
+                drug_id: document.getElementById('new-drug_id').value,
+                drug_name: document.getElementById('new-drug_name').value,
+                therapeutic_area: document.getElementById('new-therapeutic_area').value,
+                region: "North America",
+                expiry_date: document.getElementById('new-expiry_date').value,
+                units_sold: parseInt(document.getElementById('new-units_sold').value),
+                drug_price: parseFloat(document.getElementById('new-drug_price').value),
+                total_revenue: parseFloat(document.getElementById('new-total_revenue').value)
+            };
+            let data = JSON.parse(localStorage.getItem('pharma_db'));
+            data.unshift(newItem);
+            localStorage.setItem('pharma_db', JSON.stringify(data));
+            alert("Medicine added successfully!");
+            event.target.reset();
+            checkExpiryAlerts();
+        }
+
+        function handlePatientSubmit(event) {
+            event.preventDefault();
+            const newPatient = {
+                name: document.getElementById('pat-name').value,
+                ageGender: document.getElementById('pat-age-gender').value,
+                contact: document.getElementById('pat-contact').value,
+                diagnosis: document.getElementById('pat-diagnosis').value,
+                medicine: document.getElementById('pat-medicine').value
+            };
+            let patients = JSON.parse(localStorage.getItem('pharma_patients'));
+            patients.unshift(newPatient);
+            localStorage.setItem('pharma_patients', JSON.stringify(patients));
+            alert("Patient admitted successfully!");
+            event.target.reset();
+            renderPatientsTable();
+        }
+
+        function renderPatientsTable() {
+            const patients = JSON.parse(localStorage.getItem('pharma_patients'));
+            const tbody = document.getElementById('patientTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            patients.forEach(p => {
+                tbody.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-3 font-bold">${p.name}</td><td class="p-3">${p.ageGender}</td><td class="p-3">${p.contact}</td><td class="p-3">${p.diagnosis}</td><td class="p-3 text-green-600 font-semibold">${p.medicine}</td></tr>`;
+            });
+        }
+
+        function renderTable() {
+            const data = JSON.parse(localStorage.getItem('pharma_db'));
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filterArea = document.getElementById('filterTherapeutic').value;
+            const filterReg = document.getElementById('filterRegion').value;
+            const tbody = document.getElementById('databaseTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            data.filter(item => {
+                return (item.drug_name.toLowerCase().includes(search) || item.drug_id.toLowerCase().includes(search)) &&
+                       (filterArea === '' || item.therapeutic_area === filterArea) &&
+                       (filterReg === '' || item.region === filterReg);
+            }).forEach((item, index) => {
+                tbody.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-3 font-mono text-xs">${item.drug_id}</td><td class="p-3 font-semibold">${item.drug_name}</td><td class="p-3">${item.therapeutic_area}</td><td class="p-3">${item.expiry_date || '2027-01-01'}</td><td class="p-3">${item.units_sold}</td><td class="p-3">$${item.drug_price}</td><td class="p-3 font-bold text-green-600">$${item.total_revenue}</td><td class="p-3 text-center"><button onclick="deleteRecord(${index})" class="text-red-600 bg-red-50 px-2 py-1 rounded"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+            });
+        }
+
+        function deleteRecord(index) {
+            let data = JSON.parse(localStorage.getItem('pharma_db'));
+            data.splice(index, 1);
+            localStorage.setItem('pharma_db', JSON.stringify(data));
+            renderTable();
+            checkExpiryAlerts();
+        }
+
+        function checkExpiryAlerts() {
+            const data = JSON.parse(localStorage.getItem('pharma_db'));
+            let count = 0;
+            const today = new Date();
+            data.forEach(item => {
+                const diffDays = Math.ceil((new Date(item.expiry_date || '2027-01-01') - today) / (1000 * 60 * 60 * 24));
+                if (diffDays <= 90) count++;
+            });
+            const badge = document.getElementById('expiry-badge');
+            if (badge && count > 0) {
+                badge.innerText = count;
+                badge.classList.remove('hidden');
+            }
+        }
+
+        function renderExpiryView() {
+            const data = JSON.parse(localStorage.getItem('pharma_db'));
+            const tbody = document.getElementById('expiryTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const today = new Date();
+            data.forEach((item, index) => {
+                const diffDays = Math.ceil((new Date(item.expiry_date || '2027-01-01') - today) / (1000 * 60 * 60 * 24));
+                let status = diffDays < 0 ? '<span class="text-red-600 font-bold">Expired</span>' : diffDays <= 90 ? '<span class="text-amber-600 font-bold">Near Expiry</span>' : '<span class="text-green-600">Safe</span>';
+                tbody.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-3 font-mono text-xs">${item.drug_id}</td><td class="p-3 font-semibold">${item.drug_name}</td><td class="p-3">${item.expiry_date}</td><td class="p-3">${status}</td><td class="p-3 text-center"><button onclick="deleteRecord(${index})" class="px-2 py-1 bg-red-600 text-white rounded text-xs">Remove</button></td></tr>`;
+            });
+        }
+
+        function renderCharts() {
+            const data = JSON.parse(localStorage.getItem('pharma_db'));
+            const areaMap = {};
+            const regionMap = {};
+            data.forEach(item => {
+                areaMap[item.therapeutic_area] = (areaMap[item.therapeutic_area] || 0) + item.total_revenue;
+                regionMap[item.region] = (regionMap[item.region] || 0) + 1;
+            });
+            const ctx1 = document.getElementById('therapeuticChart');
+            if (ctx1) {
+                if (therapeuticChartInstance) therapeuticChartInstance.destroy();
+                therapeuticChartInstance = new Chart(ctx1.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: Object.keys(areaMap), datasets: [{ data: Object.values(areaMap), backgroundColor: '#22c55e', borderRadius: 8 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
+            const ctx2 = document.getElementById('regionChart');
+            if (ctx2) {
+                if (regionChartInstance) regionChartInstance.destroy();
+                regionChartInstance = new Chart(ctx2.getContext('2d'), {
+                    type: 'doughnut',
+                    data: { labels: Object.keys(regionMap), datasets: [{ data: Object.values(regionMap), backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6'] }] },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        }
+
+        function runSimulation() {
+            const price = parseFloat(document.getElementById('sim-price').value);
+            const marketing = parseFloat(document.getElementById('sim-marketing').value);
+            document.getElementById('val-price').innerText = price;
+            document.getElementById('val-marketing').innerText = marketing.toLocaleString();
+            const rev = (200 + (marketing / 15000) - (price * 0.15)) * price;
+            document.getElementById('sim-rev-result').innerText = "$" + rev.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        function exportCSV() {
+            const data = JSON.parse(localStorage.getItem('pharma_db'));
+            let csv = Object.keys(data[0]).join(',') + '\n';
+            data.forEach(row => { csv += Object.values(row).join(',') + '\n'; });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = window.URL.createObjectURL(blob);
+            a.download = 'pharma_export.csv';
+            a.click();
+        }
+    </script>
+</body>
+</html>
